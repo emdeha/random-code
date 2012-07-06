@@ -12,10 +12,12 @@ fb.authenticate()
 today = date.today()
 nextDay = today + timedelta(1)
 query = ("SELECT username FROM user WHERE uid IN "
-	     "(SELECT uid2 FROM friend WHERE uid1 = me()) AND "
-	     "(substr(birthday_date, 0, 2) = \'" + today.strftime("%m") + "\' AND "
-	     "substr(birthday_date, 3, 5) >= \'" + today.strftime("%d") + "\' AND "
-	     "substr(birthday_date, 3, 5) <= \'" + nextDay.strftime("%d") + "\')")
+	 "(SELECT uid2 FROM friend WHERE uid1 = me()) AND "
+	 "(substr(birthday_date, 0, 2) = {0} AND "
+	 "substr(birthday_date, 3, 5) >= {1} AND "
+	 "substr(birthday_date, 3, 5) <= {2})").format(today.strftime("%m"), today.strftime("%d"), nextDay.strftime("%d"))
+
+
 names = fb.fql(query)
 
 print "Birthdays greeted: "
