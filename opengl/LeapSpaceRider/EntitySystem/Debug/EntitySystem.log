@@ -1,0 +1,18 @@
+﻿Build started 19.12.2012 г. 18:25:38 ч..
+     1>Project "E:\CECI\Programming\MyPrograms\OpenGL\OpenGL Tasks\TestPlayground\EntitySystem\EntitySystem.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "Debug\EntitySystem.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+       Lib:
+         All outputs are up-to-date.
+         EntitySystem.vcxproj -> E:\CECI\Programming\MyPrograms\OpenGL\OpenGL Tasks\TestPlayground\Debug\EntitySystem.lib
+       FinalizeBuildStatus:
+         Deleting file "Debug\EntitySystem.unsuccessfulbuild".
+         Touching "Debug\EntitySystem.lastbuildstate".
+     1>Done Building Project "E:\CECI\Programming\MyPrograms\OpenGL\OpenGL Tasks\TestPlayground\EntitySystem\EntitySystem.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:00.03
