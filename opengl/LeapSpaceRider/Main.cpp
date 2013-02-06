@@ -196,8 +196,10 @@ long long GetCurrentTimeMillis()
 
 long long currentTime_milliseconds;
 
-Spaceship spaceship = Spaceship(glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f),
+Spaceship spaceship = Spaceship(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
 							    glm::vec3(0.0f, 0.0f, 15.0f));
+
+int oldTimeSinceStart = 0;
 
 //Called after the window and OpenGL are initialized. Called exactly once, before the main loop.
 void init()
@@ -232,6 +234,7 @@ void init()
 glm::vec3 planePosition = glm::vec3();
 float planeRotationY = 0.0f;
 
+int deltaTime = 0;
 
 //Called to update the display.
 //You should call glutSwapBuffers after all of your rendering to display what you rendered.
@@ -259,7 +262,13 @@ void display()
 	modelMatrix.SetMatrix(camera.CalcMatrix());
 	
 
-	spaceship.Render(modelMatrix, simpleProgram);	
+	int timeSinceStart = glutGet(GLUT_ELAPSED_TIME);
+	deltaTime = timeSinceStart - oldTimeSinceStart;
+	oldTimeSinceStart = timeSinceStart;
+
+
+	spaceship.Update(deltaTime);
+	spaceship.Render(modelMatrix, simpleProgram);
 
 
 	glutSwapBuffers();
@@ -353,6 +362,12 @@ void keyboard(unsigned char key, int x, int y)
 	case 27:
 		glutLeaveMainLoop();
 		return;
+	case 'a':
+		spaceship.Steer(deltaTime, 2.0f, -1.0f);
+		break;
+	case 'w':
+		spaceship.Move(deltaTime, 0.00001f, 1.0f);
+		break;
 	}
 }
 

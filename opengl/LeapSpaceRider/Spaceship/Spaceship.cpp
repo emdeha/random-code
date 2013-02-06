@@ -10,6 +10,10 @@ Spaceship::Spaceship(glm::vec3 newForwardVector, glm::vec3 newRightVector, glm::
 	upVector = newUpVector;
 	maxSpeed = newMaxSpeed;
 	currentSpeed = glm::vec3();
+	acceleration = glm::vec3();
+	velocity = glm::vec3();
+	position = glm::vec3();
+	steerAngle = 0.0f;
 }
 
 void Spaceship::InitMesh(const std::string &meshFileName)
@@ -27,7 +31,22 @@ void Spaceship::InitMesh(const std::string &meshFileName)
 
 void Spaceship::Update(float deltaTime)
 {
+	glm::vec3 lateralVelocity = rightVector * glm::dot(velocity, rightVector);
+	float lateralFrictionFactor = 0.1f;
+	glm::vec3 lateralFriction = -lateralVelocity * lateralFrictionFactor;
 
+	glm::vec3 backwardsFrictionVector = forwardVector * 0.01f;
+	glm::vec3 backwardsFriction = -velocity * backwardsFrictionVector;
+
+	velocity += (backwardsFriction + lateralFriction) * deltaTime;
+	
+	//currentSpeed = glm::normalize(velocity);
+	//if(currentSpeed < maxSpeed)
+	//{
+		velocity += acceleration * deltaTime;
+	//}
+
+	position += velocity * deltaTime;
 }
 void Spaceship::Render(glutil::MatrixStack &modelMatrix, const SimpleProgram &program)
 {
@@ -35,7 +54,8 @@ void Spaceship::Render(glutil::MatrixStack &modelMatrix, const SimpleProgram &pr
 	{
 		glutil::PushStack push(modelMatrix);
 	
-		modelMatrix.Translate(glm::vec3());
+		modelMatrix.Translate(position);
+		modelMatrix.Rotate(upVector, -steerAngle);
 		modelMatrix.Scale(0.5f);
 		
 		glUniformMatrix4fv(program.modelToCameraMatrixUnif, 1, GL_FALSE, glm::value_ptr(modelMatrix.Top()));
@@ -46,11 +66,22 @@ void Spaceship::Render(glutil::MatrixStack &modelMatrix, const SimpleProgram &pr
 	glUseProgram(0);
 }
 
-void Spaceship::Steer(float steerFactor)
+void Spaceship::Steer(float deltaTime, float steerFactor, float steerInput)
 {
+	steerAngle = steerInput * steerFactor;
 
+	glutil::MatrixStack transform;
+	transform.Rotate(upVector, steerAngle);
+	glm::vec3 newForwardVector = forwardVector;
+	newForwardVector = newForwardVector * glm::mat3(transform.Top());
+
+	// lerping for keyboard. remove if leap.
+	float steerLerpFactor = 0.1f;
+	float amount = deltaTime * steerLerpFactor;
+	forwardVector = glm::mix(forwardVector, newForwardVector, amount);
+	forwardVector = glm::normalize(forwardVector);
 }
-void Spaceship::Move(float accelerationFactor)
+void Spaceship::Move(float deltaTime, float accelerationFactor, float accelerationInput)
 {
-
+	acceleration = forwardVector * accelerationInput * accelerationFactor;
 }

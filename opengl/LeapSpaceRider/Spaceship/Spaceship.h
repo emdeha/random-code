@@ -16,8 +16,13 @@ private:
 	glm::vec3 rightVector;
 	glm::vec3 upVector;
 
+	glm::vec3 acceleration;
+	glm::vec3 velocity;
+	glm::vec3 position;
 	glm::vec3 maxSpeed;
 	glm::vec3 currentSpeed;
+
+	float steerAngle;
 
 	std::unique_ptr<Framework::Mesh> mesh;
 
@@ -31,8 +36,8 @@ public:
 	void Update(float deltaTime);
 	void Render(glutil::MatrixStack &modelMatrix, const SimpleProgram &program);
 
-	void Steer(float steerFactor);
-	void Move(float accelerationFactor);
+	void Steer(float deltaTime, float steerFactor, float steerInput);
+	void Move(float deltaTime, float accelerationFactor, float accelerationInput);
 };
 
 
