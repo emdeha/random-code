@@ -88,6 +88,9 @@
     <ProjectReference Include="ProgramData\ProgramData.vcxproj">
       <Project>{3a86112f-5ce4-4822-a7d7-7f4085ffdd9e}</Project>
     </ProjectReference>
+    <ProjectReference Include="Spaceship\Spaceship.vcxproj">
+      <Project>{834dd61c-af53-44b7-971a-5b4f90f87b06}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Camera", "Camera\Camera.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProgramData", "ProgramData\ProgramData.vcxproj", "{3A86112F-5CE4-4822-A7D7-7F4085FFDD9E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Spaceship", "Spaceship\Spaceship.vcxproj", "{834DD61C-AF53-44B7-971A-5B4F90F87B06}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -31,6 +33,10 @@ Global
 		{3A86112F-5CE4-4822-A7D7-7F4085FFDD9E}.Debug|Win32.Build.0 = Debug|Win32
 		{3A86112F-5CE4-4822-A7D7-7F4085FFDD9E}.Release|Win32.ActiveCfg = Release|Win32
 		{3A86112F-5CE4-4822-A7D7-7F4085FFDD9E}.Release|Win32.Build.0 = Release|Win32
+		{834DD61C-AF53-44B7-971A-5B4F90F87B06}.Debug|Win32.ActiveCfg = Debug|Win32
+		{834DD61C-AF53-44B7-971A-5B4F90F87B06}.Debug|Win32.Build.0 = Debug|Win32
+		{834DD61C-AF53-44B7-971A-5B4F90F87B06}.Release|Win32.ActiveCfg = Release|Win32
+		{834DD61C-AF53-44B7-971A-5B4F90F87B06}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

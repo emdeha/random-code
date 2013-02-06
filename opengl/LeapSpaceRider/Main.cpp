@@ -17,7 +17,8 @@
 
 #include "Camera/TopDownCamera.h"
 #include "ProgramData/ProgramData.h"
-#include "framework\LeapListener.h"
+#include "Spaceship/Spaceship.h"
+#include "framework/LeapListener.h"
 
 
 #define ARRAY_COUNT( array ) (sizeof( array ) / (sizeof( array[0] ) * (sizeof( array ) != sizeof(void*) || sizeof( array[0] ) <= sizeof(void*))))
@@ -26,7 +27,7 @@
 const float CAMERA_HEIGHT = 12.5f;
 
 
-TopDownCamera camera = TopDownCamera(glm::vec3(-2.5f, 0.0f, 0.0f), CAMERA_HEIGHT, 90.0f, 135.0f);
+TopDownCamera camera = TopDownCamera(glm::vec3(0.0f, 0.0f, 0.0f), CAMERA_HEIGHT, 270.0f, 45.0f);
 
 SimpleProgram simpleProgram;
 
@@ -195,6 +196,9 @@ long long GetCurrentTimeMillis()
 
 long long currentTime_milliseconds;
 
+Spaceship spaceship = Spaceship(glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f),
+							    glm::vec3(0.0f, 0.0f, 15.0f));
+
 //Called after the window and OpenGL are initialized. Called exactly once, before the main loop.
 void init()
 {
@@ -218,6 +222,10 @@ void init()
 	glDepthMask(GL_TRUE);
 	glDepthFunc(GL_LEQUAL);
 	glDepthRange(0.0f, 1.0f);
+
+
+	spaceship.InitMesh("mesh-files/Ship.xml");
+	//spaceship = Spaceship(glm::vec3(), glm::vec3(), glm::vec3(), glm::vec3(), "data/mesh-files/Ship.xml");
 }
 
 
@@ -246,37 +254,13 @@ void display()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 
-	glm::vec3 cameraPosition = camera.ResolveCamPosition();
-	
-	glutil::MatrixStack modelMatrix;
-			
+	glm::vec3 cameraPosition = camera.ResolveCamPosition();	
+	glutil::MatrixStack modelMatrix;			
 	modelMatrix.SetMatrix(camera.CalcMatrix());
 	
 
-	glUseProgram(simpleProgram.theProgram);
-	glBindVertexArray(vao);
-	{
-		modelMatrix.Translate(planePosition);
-		modelMatrix.RotateY(planeRotationY);
+	spaceship.Render(modelMatrix, simpleProgram);	
 
-		glUniformMatrix4fv(simpleProgram.modelToCameraMatrixUnif, 1, GL_FALSE, glm::value_ptr(modelMatrix.Top()));
-
-		glUniform4f(simpleProgram.colorUnif, 1.0f, 0.0f, 0.0f, 1.0f);
-
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
-		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
-
-		glDisableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	}
-	glBindVertexArray(0);
-	glUseProgram(0);
-			
 
 	glutSwapBuffers();
 	glutPostRedisplay();
@@ -325,9 +309,7 @@ void UserListener::onExit(const Leap::Controller& controller)
 
 void CalculatePosition(const Leap::Hand &hand)
 {
-
-
-		glm::vec3 handVelocity = glm::vec3(hand.palmVelocity().x,
+	glm::vec3 handVelocity = glm::vec3(hand.palmVelocity().x,
 									   hand.palmVelocity().y,
 									   hand.palmVelocity().z);
 	planePosition.x += handVelocity.x / 1000.0f;
