@@ -17,10 +17,11 @@
 
 #include "Camera/TopDownCamera.h"
 #include "ProgramData/ProgramData.h"
+#include "framework\LeapListener.h"
 
 
 #define ARRAY_COUNT( array ) (sizeof( array ) / (sizeof( array[0] ) * (sizeof( array ) != sizeof(void*) || sizeof( array[0] ) <= sizeof(void*))))
-
+#define PI 3.1419f
 
 const float CAMERA_HEIGHT = 12.5f;
 
@@ -220,6 +221,10 @@ void init()
 }
 
 
+glm::vec3 planePosition = glm::vec3();
+float planeRotationY = 0.0f;
+
+
 //Called to update the display.
 //You should call glutSwapBuffers after all of your rendering to display what you rendered.
 //If you need continuous updates of the screen, call glutPostRedisplay() at the end of the function.
@@ -251,6 +256,9 @@ void display()
 	glUseProgram(simpleProgram.theProgram);
 	glBindVertexArray(vao);
 	{
+		modelMatrix.Translate(planePosition);
+		modelMatrix.RotateY(planeRotationY);
+
 		glUniformMatrix4fv(simpleProgram.modelToCameraMatrixUnif, 1, GL_FALSE, glm::value_ptr(modelMatrix.Top()));
 
 		glUniform4f(simpleProgram.colorUnif, 1.0f, 0.0f, 0.0f, 1.0f);
@@ -293,6 +301,64 @@ void reshape (int width, int height)
 
 float newPositionX = 0.0f;
 float newDistance = CAMERA_HEIGHT;
+
+
+void UserListener::onInit(const Leap::Controller& controller) 
+{	
+	std::cout << "Initialized" << std::endl;
+}
+
+void UserListener::onConnect(const Leap::Controller& controller) 
+{
+	std::cout << "Connected" << std::endl;
+}
+
+void UserListener::onDisconnect(const Leap::Controller& controller) 
+{
+	std::cout << "Disconnected" << std::endl;
+}
+
+void UserListener::onExit(const Leap::Controller& controller) 
+{
+	std::cout << "Exited" << std::endl;
+}
+
+void CalculatePosition(const Leap::Hand &hand)
+{
+
+
+		glm::vec3 handVelocity = glm::vec3(hand.palmVelocity().x,
+									   hand.palmVelocity().y,
+									   hand.palmVelocity().z);
+	planePosition.x += handVelocity.x / 1000.0f;
+	planePosition.y += -handVelocity.z / 1000.0f;
+	
+}
+void CalculateRotation(const Leap::Hand &hand)
+{
+	glm::vec3 handNormal = glm::vec3(hand.palmNormal().x,
+									 hand.palmNormal().y,
+									 hand.palmNormal().z);
+	glm::vec3 zeroVector = glm::vec3();
+	glm::vec3 deltaPos = zeroVector - handNormal;
+
+	planeRotationY = atan2f(deltaPos.x, deltaPos.z) * 180 / PI;
+}
+
+void UserListener::onFrame(const Leap::Controller& controller)
+{
+	const Leap::Frame currentFrame = controller.frame();
+
+	if(!currentFrame.hands().empty())
+	{
+		const Leap::Hand movementHand = currentFrame.hands()[0];
+
+		CalculatePosition(movementHand);
+		CalculateRotation(movementHand);		
+	}
+}
+
+
 
 //Called whenever a key on the keyboard was pressed.
 //The key is given by the ''key'' parameter, which is in ASCII.

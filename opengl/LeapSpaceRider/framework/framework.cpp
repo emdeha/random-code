@@ -15,6 +15,7 @@
 #include <glload/gll.hpp>
 #include <glutil/Shader.h>
 #include <GL/freeglut.h>
+#include "LeapListener.h"
 #include "framework.h"
 #include "directories.h"
 
@@ -167,9 +168,16 @@ int main(int argc, char** argv)
 
 	init();
 
+	UserListener listener;
+	Leap::Controller controller;
+	controller.addListener(listener);
+
 	glutDisplayFunc(display); 
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
 	glutMainLoop();
+
+	controller.removeListener(listener);
+
 	return 0;
 }
