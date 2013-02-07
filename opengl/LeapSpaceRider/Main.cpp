@@ -344,8 +344,28 @@ void UserListener::onFrame(const Leap::Controller& controller)
 	{
 		const Leap::Hand movementHand = currentFrame.hands()[0];
 
-		CalculatePosition(movementHand);
-		CalculateRotation(movementHand);		
+		float acceleration = movementHand.sphereRadius();
+		if(acceleration > 0.0f)
+		{
+			float accelerationInput = (acceleration - 50) / 100; // 100 - the maximum sphere radius. 
+
+			//std::printf("%f\n", acceleration);
+
+			spaceship.Move(deltaTime, 0.00001f, accelerationInput);
+		}
+
+
+		glm::vec3 handNormal = glm::vec3(movementHand.palmNormal().x,
+										 movementHand.palmNormal().y,
+										 movementHand.palmNormal().z);
+		glm::vec3 zeroVector = glm::vec3();
+		glm::vec3 deltaPos = zeroVector - handNormal;
+
+		float steerInput = atan2f(deltaPos.x, deltaPos.y) * 180 / PI;
+		spaceship.Steer(deltaTime, 2.0f, steerInput);
+
+		//CalculatePosition(movementHand);
+		//CalculateRotation(movementHand);		
 	}
 }
 
