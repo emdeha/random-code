@@ -55,7 +55,7 @@ void Spaceship::Render(glutil::MatrixStack &modelMatrix, const SimpleProgram &pr
 		glutil::PushStack push(modelMatrix);
 	
 		modelMatrix.Translate(position);
-		modelMatrix.Rotate(upVector, -steerAngle);
+		modelMatrix.Rotate(upVector, -steerAngle * 45.0f);
 		modelMatrix.Scale(0.5f);
 		
 		glUniformMatrix4fv(program.modelToCameraMatrixUnif, 1, GL_FALSE, glm::value_ptr(modelMatrix.Top()));
@@ -76,7 +76,6 @@ void Spaceship::Steer(float deltaTime, float steerFactor, float steerInput)
 	newForwardVector = glm::mat3(transform.Top()) * newForwardVector;
 	forwardVector = glm::normalize(newForwardVector);
 
-	std::printf("%f, %f, %f\n", forwardVector.x, forwardVector.y, forwardVector.z);
 
 	// lerping for keyboard. remove if leap.
 	/*
@@ -89,4 +88,13 @@ void Spaceship::Steer(float deltaTime, float steerFactor, float steerInput)
 void Spaceship::Move(float deltaTime, float accelerationFactor, float accelerationInput)
 {
 	acceleration = forwardVector * accelerationInput * accelerationFactor;
+}
+
+glm::vec3 Spaceship::GetPosition()
+{
+	return position;
+}
+float Spaceship::GetSteerAngle()
+{
+	return steerAngle;
 }

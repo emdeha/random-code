@@ -38,6 +38,9 @@ public:
 
 	void Steer(float deltaTime, float steerFactor, float steerInput);
 	void Move(float deltaTime, float accelerationFactor, float accelerationInput);
+
+	glm::vec3 GetPosition();
+	float GetSteerAngle();
 };
 
 

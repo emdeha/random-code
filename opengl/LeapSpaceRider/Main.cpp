@@ -12,6 +12,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glutil/MatrixStack.h>
+#include <glimg/glimg.h>
+#include <glimg/TextureGenerator.h>
 
 #include <ctime>
 
@@ -30,6 +32,10 @@ const float CAMERA_HEIGHT = 12.5f;
 TopDownCamera camera = TopDownCamera(glm::vec3(0.0f, 0.0f, 0.0f), CAMERA_HEIGHT, 270.0f, 45.0f);
 
 SimpleProgram simpleProgram;
+TextureProgData textureProgram;
+const int g_projectionBlockIndex = 0;
+const int g_colorTexUnit = 0;
+
 
 
 void InitializeSimpleProgram()
@@ -46,8 +52,29 @@ void InitializeSimpleProgram()
 
 	simpleProgram.colorUnif = glGetUniformLocation(simpleProgram.theProgram, "color");
 }
+void InitializeTextureProgram()
+{
+	std::vector<GLuint> shaderList;
 
+	shaderList.push_back(Framework::LoadShader(GL_VERTEX_SHADER, "shaders/PT.vert"));
+	shaderList.push_back(Framework::LoadShader(GL_FRAGMENT_SHADER, "shaders/Tex.frag"));
 
+	textureProgram.theProgram = Framework::CreateProgram(shaderList);
+	textureProgram.modelToCameraMatrixUnif = 
+		glGetUniformLocation(textureProgram.theProgram, "modelToCameraMatrix");
+
+	GLuint projectionBlock = 
+		glGetUniformBlockIndex(textureProgram.theProgram, "Projection");
+
+	glUniformBlockBinding(textureProgram.theProgram, projectionBlock, g_projectionBlockIndex);
+
+	GLuint colorTextureUnif = glGetUniformLocation(textureProgram.theProgram, "colorTexture");
+	glUseProgram(textureProgram.theProgram);
+	glUniform1i(colorTextureUnif, g_colorTexUnit);
+	glUseProgram(0);
+}
+
+/*
 const float simpleVertexData[] =
 {
 	-1.0f, +1.0f, 0.0f, 1.0f,
@@ -166,7 +193,7 @@ void InitializeTextureVertexBuffer()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
-
+*/
 unsigned int frameCount = 0;
 const char WINDOW_TITLE[] = "Test Playground: ";
 
@@ -201,19 +228,177 @@ Spaceship spaceship = Spaceship(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.0
 
 int oldTimeSinceStart = 0;
 
+
+struct ProjectionBlock
+{
+	glm::mat4 cameraToClipMatrix;
+};
+
+
+GLuint g_projectionUniformBuffer = 0;
+GLuint g_checkerTexture = 0;
+GLuint g_mipmapTestTexture = 0;
+
+const int NUM_SAMPLERS = 6;
+GLuint g_samplers[NUM_SAMPLERS];
+
+
+void CreateSamplers()
+{
+	glGenSamplers(NUM_SAMPLERS, &g_samplers[0]);
+
+	for(int samplerIx = 0; samplerIx < NUM_SAMPLERS; samplerIx++)
+	{
+		glSamplerParameteri(g_samplers[samplerIx], GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glSamplerParameteri(g_samplers[samplerIx], GL_TEXTURE_WRAP_T, GL_REPEAT);
+	}
+
+	//Nearest
+	glSamplerParameteri(g_samplers[0], GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glSamplerParameteri(g_samplers[0], GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	//Linear
+	glSamplerParameteri(g_samplers[1], GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glSamplerParameteri(g_samplers[1], GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	//Linear mipmap Nearest
+	glSamplerParameteri(g_samplers[2], GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glSamplerParameteri(g_samplers[2], GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+
+	//Linear mipmap linear
+	glSamplerParameteri(g_samplers[3], GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glSamplerParameteri(g_samplers[3], GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+	//Low anisotropic
+	glSamplerParameteri(g_samplers[4], GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glSamplerParameteri(g_samplers[4], GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glSamplerParameterf(g_samplers[4], GL_TEXTURE_MAX_ANISOTROPY_EXT, 4.0f);
+
+	//Max anisotropic
+	GLfloat maxAniso = 0.0f;
+	glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
+
+	printf("Maximum anisotropy: %f\n", maxAniso);
+
+	glSamplerParameteri(g_samplers[5], GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glSamplerParameteri(g_samplers[5], GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glSamplerParameterf(g_samplers[5], GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
+}
+
+void FillWithColor(std::vector<GLubyte> &buffer,
+				   GLubyte red, GLubyte green, GLubyte blue,
+				   int width, int height)
+{
+	int numTexels = width * height;
+	buffer.resize(numTexels * 3);
+
+	std::vector<GLubyte>::iterator it = buffer.begin();
+	while(it != buffer.end())
+	{
+		*it++ = red;
+		*it++ = green;
+		*it++ = blue;
+	}
+}
+
+const GLubyte mipmapColors[] =
+{
+	0xFF, 0xFF, 0x00,
+	0xFF, 0x00, 0xFF,
+	0x00, 0xFF, 0xFF,
+	0xFF, 0x00, 0x00,
+	0x00, 0xFF, 0x00,
+	0x00, 0x00, 0xFF,
+	0x00, 0x00, 0x00,
+	0xFF, 0xFF, 0xFF,
+};
+
+void LoadMipmapTexture()
+{
+		glGenTextures(1, &g_mipmapTestTexture);
+		glBindTexture(GL_TEXTURE_2D, g_mipmapTestTexture);
+
+		GLint oldAlign = 0;
+		glGetIntegerv(GL_UNPACK_ALIGNMENT, &oldAlign);
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+		for(int mipmapLevel = 0; mipmapLevel < 8; mipmapLevel++)
+		{
+			int width = 128 >> mipmapLevel;
+			int height = 128 >> mipmapLevel;
+			std::vector<GLubyte> buffer;
+
+			const GLubyte *pCurrColor = &mipmapColors[mipmapLevel * 3];
+			FillWithColor(buffer, pCurrColor[0], pCurrColor[1], pCurrColor[2], width, height);
+
+			glTexImage2D(GL_TEXTURE_2D, mipmapLevel, GL_RGB8, width, height, 0,
+				GL_RGB, GL_UNSIGNED_BYTE, &buffer[0]);
+		}
+
+		glPixelStorei(GL_UNPACK_ALIGNMENT, oldAlign);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 7);
+		glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void LoadCheckerTexture()
+{
+	try
+	{
+		std::string filename = "data/checker.dds";
+
+		std::auto_ptr<glimg::ImageSet> pImageSet(glimg::loaders::dds::LoadFromFile(filename.c_str()));
+
+		glGenTextures(1, &g_checkerTexture);
+		glBindTexture(GL_TEXTURE_2D, g_checkerTexture);
+
+		for(int mipmapLevel = 0; mipmapLevel < pImageSet->GetMipmapCount(); mipmapLevel++)
+		{
+			glimg::SingleImage image = pImageSet->GetImage(mipmapLevel, 0, 0);
+			glimg::Dimensions dims = image.GetDimensions();
+
+			glTexImage2D(GL_TEXTURE_2D, mipmapLevel, GL_RGB8, dims.width, dims.height, 0,
+				GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, image.GetImageData());
+		}
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, pImageSet->GetMipmapCount() - 1);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+	catch(std::exception &e)
+	{
+		printf("%s\n", e.what());
+		throw;
+	}
+}
+
+Framework::Mesh *g_pPlane = NULL;
+
 //Called after the window and OpenGL are initialized. Called exactly once, before the main loop.
 void init()
 {
 	currentTime_milliseconds = GetCurrentTimeMillis();
 
+	try
+	{
+		g_pPlane = new Framework::Mesh("mesh-files/BigPlane.xml");
+	}
+	catch(std::exception &except)
+	{
+		printf("%s\n", except.what());
+		throw;
+	}
+
 	glutTimerFunc(0, TimerFunction, 0);
-	
+	/*
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
-
+	*/
 
 	InitializeSimpleProgram();
-	InnitializePlane(glm::vec3(), 5.0f, 5.0f);
+	InitializeTextureProgram();
+	//InnitializePlane(glm::vec3(), 5.0f, 5.0f);
 
 
 	glEnable(GL_CULL_FACE);
@@ -227,7 +412,20 @@ void init()
 
 
 	spaceship.InitMesh("mesh-files/Ship.xml");
-	//spaceship = Spaceship(glm::vec3(), glm::vec3(), glm::vec3(), glm::vec3(), "data/mesh-files/Ship.xml");
+
+	//Setup our Uniform Buffers
+	glGenBuffers(1, &g_projectionUniformBuffer);
+	glBindBuffer(GL_UNIFORM_BUFFER, g_projectionUniformBuffer);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(ProjectionBlock), NULL, GL_DYNAMIC_DRAW);
+
+	glBindBufferRange(GL_UNIFORM_BUFFER, g_projectionBlockIndex, g_projectionUniformBuffer,
+		0, sizeof(ProjectionBlock));
+
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+	LoadCheckerTexture();
+	LoadMipmapTexture();
+	CreateSamplers();
 }
 
 
@@ -235,6 +433,9 @@ glm::vec3 planePosition = glm::vec3();
 float planeRotationY = 0.0f;
 
 int deltaTime = 0;
+
+bool g_useMipmapTexture = false;
+int g_currSampler = 4;
 
 //Called to update the display.
 //You should call glutSwapBuffers after all of your rendering to display what you rendered.
@@ -266,6 +467,24 @@ void display()
 	deltaTime = timeSinceStart - oldTimeSinceStart;
 	oldTimeSinceStart = timeSinceStart;
 
+	camera = TopDownCamera(spaceship.GetPosition(), CAMERA_HEIGHT, 270.0f, 45.0f);
+
+	{
+		glUseProgram(textureProgram.theProgram);
+		glUniformMatrix4fv(textureProgram.modelToCameraMatrixUnif, 1, GL_FALSE,
+			glm::value_ptr(modelMatrix.Top()));
+
+		glActiveTexture(GL_TEXTURE0 + g_colorTexUnit);
+		glBindTexture(GL_TEXTURE_2D,
+			g_useMipmapTexture ? g_mipmapTestTexture : g_checkerTexture);
+		glBindSampler(g_colorTexUnit, g_samplers[g_currSampler]);
+
+		g_pPlane->Render("tex");
+
+		glBindSampler(g_colorTexUnit, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glUseProgram(0);
+	}
 
 	spaceship.Update(deltaTime);
 	spaceship.Render(modelMatrix, simpleProgram);
@@ -287,6 +506,14 @@ void reshape (int width, int height)
 	glUseProgram(simpleProgram.theProgram);
 	glUniformMatrix4fv(simpleProgram.cameraToClipMatrixUnif, 1, GL_FALSE, glm::value_ptr(projMatrix.Top()));
 	glUseProgram(0);
+
+
+	ProjectionBlock projData;
+	projData.cameraToClipMatrix = projMatrix.Top();
+
+	glBindBuffer(GL_UNIFORM_BUFFER, g_projectionUniformBuffer);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(ProjectionBlock), &projData);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 
 	glViewport(0, 0, (GLsizei) width, (GLsizei) height);
@@ -343,25 +570,29 @@ void UserListener::onFrame(const Leap::Controller& controller)
 	if(!currentFrame.hands().empty())
 	{
 		const Leap::Hand movementHand = currentFrame.hands()[0];
-
-		float acceleration = movementHand.sphereRadius();
-		if(acceleration > 0.0f)
-		{
-			float accelerationInput = (acceleration - 50) / 100; // 100 - the maximum sphere radius. 
-
-			//std::printf("%f\n", acceleration);
-
-			spaceship.Move(deltaTime, 0.00001f, accelerationInput);
-		}
-
-
+		
+		
 		glm::vec3 handNormal = glm::vec3(movementHand.palmNormal().x,
 										 movementHand.palmNormal().y,
 										 movementHand.palmNormal().z);
 		glm::vec3 zeroVector = glm::vec3();
 		glm::vec3 deltaPos = zeroVector - handNormal;
 
-		float steerInput = atan2f(deltaPos.x, deltaPos.y) * 180 / PI;
+
+		float accelerationInput = (atan2f(deltaPos.z, deltaPos.z) * 180 / PI) / 45.0f;
+		//float acceleration = movementHand.sphereRadius();
+		//if(acceleration > 0.0f)
+		//{
+			//float accelerationInput = (acceleration - 50) / 100; // 100 - the maximum sphere radius. 
+
+			//std::printf("%f\n", acceleration);
+
+			spaceship.Move(deltaTime, 0.00001f, -accelerationInput);
+		//}
+
+
+		float steerInput = (atan2f(deltaPos.x, deltaPos.y) * 180 / PI) / 45.0f;
+		std::printf("%f\n", steerInput);
 		spaceship.Steer(deltaTime, 2.0f, steerInput);
 
 		//CalculatePosition(movementHand);
@@ -370,6 +601,16 @@ void UserListener::onFrame(const Leap::Controller& controller)
 }
 
 
+
+const char *g_samplerNames[NUM_SAMPLERS] =
+{
+	"Nearest",
+	"Linear",
+	"Linear with nearest mipmaps",
+	"Linear with linear mipmaps",
+	"Low anisotropic",
+	"Max anisotropic",
+};
 
 //Called whenever a key on the keyboard was pressed.
 //The key is given by the ''key'' parameter, which is in ASCII.
@@ -380,14 +621,23 @@ void keyboard(unsigned char key, int x, int y)
 	switch (key)
 	{
 	case 27:
+		delete g_pPlane;
+		g_pPlane = NULL;
 		glutLeaveMainLoop();
 		return;
-	case 'a':
-		spaceship.Steer(deltaTime, 2.0f, -1.0f);
+	case 32:
+		g_useMipmapTexture = !g_useMipmapTexture;
 		break;
-	case 'w':
-		spaceship.Move(deltaTime, 0.00001f, 1.0f);
-		break;
+	}
+
+	if(('1' <= key) && (key <= '9'))
+	{
+		int number = key - '1';
+		if(number < NUM_SAMPLERS)
+		{
+			printf("Sampler: %s\n", g_samplerNames[number]);
+			g_currSampler = number;
+		}
 	}
 }
 
