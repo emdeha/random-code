@@ -32,10 +32,10 @@ void Spaceship::InitMesh(const std::string &meshFileName)
 void Spaceship::Update(float deltaTime)
 {
 	glm::vec3 lateralVelocity = rightVector * glm::dot(velocity, rightVector);
-	float lateralFrictionFactor = 0.001f;
+	float lateralFrictionFactor = 0.0001f;
 	glm::vec3 lateralFriction = -lateralVelocity * lateralFrictionFactor;
 
-	float backwardsFrictionFactor = 0.0001f;
+	float backwardsFrictionFactor = 0.00001f;
 	glm::vec3 backwardsFriction = -velocity * backwardsFrictionFactor;
 
 	velocity += (backwardsFriction + lateralFriction) * deltaTime;
@@ -55,7 +55,7 @@ void Spaceship::Render(glutil::MatrixStack &modelMatrix, const SimpleProgram &pr
 		glutil::PushStack push(modelMatrix);
 	
 		modelMatrix.Translate(position);
-		modelMatrix.Rotate(upVector, -steerAngle * 45.0f);
+		modelMatrix.Rotate(upVector, -steerAngle);
 		modelMatrix.Scale(0.5f);
 		
 		glUniformMatrix4fv(program.modelToCameraMatrixUnif, 1, GL_FALSE, glm::value_ptr(modelMatrix.Top()));
@@ -69,21 +69,19 @@ void Spaceship::Render(glutil::MatrixStack &modelMatrix, const SimpleProgram &pr
 void Spaceship::Steer(float deltaTime, float steerFactor, float steerInput)
 {
 	steerAngle = steerInput * steerFactor;
-
 	glutil::MatrixStack transform;
 	transform.Rotate(upVector, -steerAngle);
 	glm::vec3 newForwardVector = forwardVector;
 	newForwardVector = glm::mat3(transform.Top()) * newForwardVector;
-	forwardVector = glm::normalize(newForwardVector);
+	//forwardVector = glm::normalize(newForwardVector);
 
 
 	// lerping for keyboard. remove if leap.
 	/*
-	float steerLerpFactor = 0.1f;
+	float steerLerpFactor = 0.001f;
 	float amount = deltaTime * steerLerpFactor;
 	forwardVector = glm::mix(forwardVector, newForwardVector, amount);
-	forwardVector = glm::normalize(forwardVector);
-	*/
+	forwardVector = glm::normalize(forwardVector);*/
 }
 void Spaceship::Move(float deltaTime, float accelerationFactor, float accelerationInput)
 {

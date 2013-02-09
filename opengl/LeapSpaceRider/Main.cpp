@@ -26,10 +26,10 @@
 #define ARRAY_COUNT( array ) (sizeof( array ) / (sizeof( array[0] ) * (sizeof( array ) != sizeof(void*) || sizeof( array[0] ) <= sizeof(void*))))
 #define PI 3.1419f
 
-const float CAMERA_HEIGHT = 12.5f;
+const float CAMERA_HEIGHT = 15.0f;
 
 
-TopDownCamera camera = TopDownCamera(glm::vec3(0.0f, 0.0f, 0.0f), CAMERA_HEIGHT, 270.0f, 45.0f);
+TopDownCamera camera = TopDownCamera(glm::vec3(0.0f, 0.0f, 0.0f), CAMERA_HEIGHT, 200.0f, 0.0f);
 
 SimpleProgram simpleProgram;
 TextureProgData textureProgram;
@@ -74,126 +74,6 @@ void InitializeTextureProgram()
 	glUseProgram(0);
 }
 
-/*
-const float simpleVertexData[] =
-{
-	-1.0f, +1.0f, 0.0f, 1.0f,
-	//1.0f, 1.0f,
-	+1.0f, +1.0f, 0.0f, 1.0f,
-	//1.0f, 0.0f,
-	-1.0f, -1.0f, 0.0f, 1.0f,
-	//0.0f, 1.0f,
-
-	+1.0f, -1.0f, 0.0f, 1.0f, 
-	//1.0f, 0.0f,
-	//-1.0f, -1.0f, 0.0f, 1.0f,
-	//0.0f, 0.0f,
-	//-1.0f, +1.0f, 0.0f, 1.0f,
-	//0.0f, 1.0f,
-};
-const float textureVertexData[] =
-{
-	-0.5f, 0.5f, 0.0f, 1.0f,
-	0.5f, 0.5f, 0.0f, 1.0f,
-	0.5f, -0.5f, 0.0f, 1.0f,
-	-0.5f, -0.5f, 0.0f, 1.0f,
-};
-
-const float textureUVData[] =
-{
-	0.0f, 0.0f,
-	1.0f, 0.0f,
-	1.0f, 1.0f, 
-	0.0f, 1.0f,
-};
-
-GLuint indices[] =
-{
-	0, 1, 2,
-	2, 3, 0,
-};
-
-GLuint vertexBufferObject;
-GLuint vertexBufferObjectTwo;
-GLuint UVBufferObject;
-GLuint indexBO;
-
-GLuint vao;
-
-
-void InnitializePlane(const glm::vec3 &position, float width, float height)
-{
-	std::vector<float> vertexData;
-	std::vector<unsigned short> indexData;
-
-	vertexData.push_back(position.x);
-	vertexData.push_back(position.y - height);
-	vertexData.push_back(position.z); vertexData.push_back(1.0f);
-
-	vertexData.push_back(position.x - width);
-	vertexData.push_back(position.y - height);
-	vertexData.push_back(position.z); vertexData.push_back(1.0f);
-
-	vertexData.push_back(position.x - width);
-	vertexData.push_back(position.y);
-	vertexData.push_back(position.z); vertexData.push_back(1.0f);
-
-	vertexData.push_back(position.x);
-	vertexData.push_back(position.y);
-	vertexData.push_back(position.z); vertexData.push_back(1.0f);
-
-			
-	indexData.push_back(0); indexData.push_back(1); indexData.push_back(2);
-	indexData.push_back(2); indexData.push_back(3); indexData.push_back(0);
-
-
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-
-	glGenBuffers(1, &vertexBufferObject);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
-	glBufferData(GL_ARRAY_BUFFER, 
-					sizeof(float) * vertexData.size(), &vertexData[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	glGenBuffers(1, &indexBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 
-					sizeof(unsigned short) * indexData.size(), &indexData[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-void InitializeSimpleVertexBuffer()
-{
-	glGenBuffers(1, &vertexBufferObject);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(simpleVertexData), simpleVertexData, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-void InitializeTextureVertexBuffer()
-{
-	glGenBuffers(1, &vertexBufferObject);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(textureVertexData), textureVertexData, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-
-	glGenBuffers(1, &UVBufferObject);
-
-	glBindBuffer(GL_ARRAY_BUFFER, UVBufferObject);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(textureUVData), textureUVData, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-
-	glGenBuffers(1, &indexBO);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-*/
 unsigned int frameCount = 0;
 const char WINDOW_TITLE[] = "Test Playground: ";
 
@@ -225,9 +105,6 @@ long long currentTime_milliseconds;
 
 Spaceship spaceship = Spaceship(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
 							    glm::vec3(0.0f, 0.0f, 15.0f));
-
-int oldTimeSinceStart = 0;
-
 
 struct ProjectionBlock
 {
@@ -375,6 +252,9 @@ void LoadCheckerTexture()
 
 Framework::Mesh *g_pPlane = NULL;
 
+
+int oldTimeSinceStart = 0;
+
 //Called after the window and OpenGL are initialized. Called exactly once, before the main loop.
 void init()
 {
@@ -391,14 +271,9 @@ void init()
 	}
 
 	glutTimerFunc(0, TimerFunction, 0);
-	/*
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	*/
 
 	InitializeSimpleProgram();
 	InitializeTextureProgram();
-	//InnitializePlane(glm::vec3(), 5.0f, 5.0f);
 
 
 	glEnable(GL_CULL_FACE);
@@ -433,6 +308,7 @@ glm::vec3 planePosition = glm::vec3();
 float planeRotationY = 0.0f;
 
 int deltaTime = 0;
+float timeSinceStart_secs = 0.0f;
 
 bool g_useMipmapTexture = false;
 int g_currSampler = 4;
@@ -465,6 +341,7 @@ void display()
 
 	int timeSinceStart = glutGet(GLUT_ELAPSED_TIME);
 	deltaTime = timeSinceStart - oldTimeSinceStart;
+	timeSinceStart_secs = timeSinceStart;
 	oldTimeSinceStart = timeSinceStart;
 
 	camera = TopDownCamera(spaceship.GetPosition(), CAMERA_HEIGHT, 270.0f, 45.0f);
@@ -570,33 +447,24 @@ void UserListener::onFrame(const Leap::Controller& controller)
 	if(!currentFrame.hands().empty())
 	{
 		const Leap::Hand movementHand = currentFrame.hands()[0];
-		
+				
+		glm::vec3 downVector = glm::vec3(0.0f, -1.0f, 0.0f);
+		glm::vec3 handDirection = glm::vec3(movementHand.direction().x,
+											movementHand.direction().y,
+											movementHand.direction().z);
+
+		float accelerationInput = glm::dot(downVector, handDirection);
+
+		spaceship.Move(deltaTime, 0.00001f, accelerationInput); 
 		
 		glm::vec3 handNormal = glm::vec3(movementHand.palmNormal().x,
 										 movementHand.palmNormal().y,
 										 movementHand.palmNormal().z);
-		glm::vec3 zeroVector = glm::vec3();
-		glm::vec3 deltaPos = zeroVector - handNormal;
+		glm::vec3 handRightVector = glm::cross(handNormal, handDirection);
 
-
-		float accelerationInput = (atan2f(deltaPos.z, deltaPos.z) * 180 / PI) / 45.0f;
-		//float acceleration = movementHand.sphereRadius();
-		//if(acceleration > 0.0f)
-		//{
-			//float accelerationInput = (acceleration - 50) / 100; // 100 - the maximum sphere radius. 
-
-			//std::printf("%f\n", acceleration);
-
-			spaceship.Move(deltaTime, 0.00001f, -accelerationInput);
-		//}
-
-
-		float steerInput = (atan2f(deltaPos.x, deltaPos.y) * 180 / PI) / 45.0f;
+		float steerInput = glm::dot(downVector, handRightVector);
 		std::printf("%f\n", steerInput);
-		spaceship.Steer(deltaTime, 2.0f, steerInput);
-
-		//CalculatePosition(movementHand);
-		//CalculateRotation(movementHand);		
+		spaceship.Steer(deltaTime, 30.0f, steerInput);
 	}
 }
 
@@ -625,6 +493,12 @@ void keyboard(unsigned char key, int x, int y)
 		g_pPlane = NULL;
 		glutLeaveMainLoop();
 		return;
+	case 'a':
+		spaceship.Steer(deltaTime, 10.0f, -1.0f);
+		break;
+	case 'd':
+		spaceship.Steer(deltaTime, 10.0f, 1.0f);
+		break;
 	case 32:
 		g_useMipmapTexture = !g_useMipmapTexture;
 		break;
