@@ -7,6 +7,7 @@
 #include "../framework/framework.h"
 #include "../framework/Mesh.h"
 #include "../ProgramData/ProgramData.h"
+#include "../bullet-physics/header/btBulletDynamicsCommon.h"
 
 
 class Spaceship
@@ -21,6 +22,8 @@ private:
 	glm::vec3 position;
 	glm::vec3 maxSpeed;
 	glm::vec3 currentSpeed;
+	
+	btRigidBody *body;
 
 	float steerAngle;
 
@@ -41,6 +44,8 @@ public:
 
 	glm::vec3 GetPosition();
 	float GetSteerAngle();
+
+	btRigidBody *GetRigidBody();
 };
 
 

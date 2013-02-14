@@ -13,7 +13,7 @@ Spaceship::Spaceship(glm::vec3 newForwardVector, glm::vec3 newRightVector, glm::
 	acceleration = glm::vec3();
 	velocity = glm::vec3();
 	position = glm::vec3();
-	steerAngle = 0.0f;
+	steerAngle = 0.0f;	
 }
 
 void Spaceship::InitMesh(const std::string &meshFileName)
@@ -27,6 +27,19 @@ void Spaceship::InitMesh(const std::string &meshFileName)
 		std::printf(except.what());
 		throw;
 	}
+
+	btBoxShape *collisionShape = new btBoxShape(btVector3(0.5f, 0.5f, 0.5f));
+	btScalar mass = 1.0f;
+
+	btTransform transform;
+	transform.setIdentity();
+	transform.setOrigin(btVector3(position.x, position.y, position.z));
+	btDefaultMotionState *motionState = new btDefaultMotionState(transform);
+	btVector3 localInertia = btVector3(0, 0, 0);
+	//collisionShape->calculateLocalInertia(mass, localInertia);
+	btRigidBody::btRigidBodyConstructionInfo info(mass, motionState, collisionShape, localInertia);
+
+	body = new btRigidBody(info);
 }
 
 void Spaceship::Update(float deltaTime)
@@ -46,6 +59,9 @@ void Spaceship::Update(float deltaTime)
 		velocity += acceleration * deltaTime;
 	//}
 
+	btTransform bodyTransform;
+	bodyTransform.setOrigin(btVector3(position.x, position.y, position.z));
+	body->getMotionState()->setWorldTransform(bodyTransform);
 	position += velocity * deltaTime;
 }
 void Spaceship::Render(glutil::MatrixStack &modelMatrix, const SimpleProgram &program)
@@ -73,7 +89,7 @@ void Spaceship::Steer(float deltaTime, float steerFactor, float steerInput)
 	transform.Rotate(upVector, -steerAngle);
 	glm::vec3 newForwardVector = forwardVector;
 	newForwardVector = glm::mat3(transform.Top()) * newForwardVector;
-	//forwardVector = glm::normalize(newForwardVector);
+	forwardVector = glm::normalize(newForwardVector);
 
 
 	// lerping for keyboard. remove if leap.
@@ -95,4 +111,9 @@ glm::vec3 Spaceship::GetPosition()
 float Spaceship::GetSteerAngle()
 {
 	return steerAngle;
+}
+
+btRigidBody *Spaceship::GetRigidBody()
+{
+	return body;
 }

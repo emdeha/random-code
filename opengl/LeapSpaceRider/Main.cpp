@@ -37,6 +37,12 @@ const int g_projectionBlockIndex = 0;
 const int g_colorTexUnit = 0;
 
 
+btDiscreteDynamicsWorld *world;
+btDefaultCollisionConfiguration *collisionConfiguration;
+btCollisionDispatcher *dispatcher;
+btBroadphaseInterface *overlappingPairCache;
+btSequentialImpulseConstraintSolver *solver;
+
 
 void InitializeSimpleProgram()
 {
@@ -223,7 +229,7 @@ void LoadCheckerTexture()
 {
 	try
 	{
-		std::string filename = "data/checker.dds";
+		std::string filename = "data/checker_linear.dds";
 
 		std::auto_ptr<glimg::ImageSet> pImageSet(glimg::loaders::dds::LoadFromFile(filename.c_str()));
 
@@ -301,6 +307,17 @@ void init()
 	LoadCheckerTexture();
 	LoadMipmapTexture();
 	CreateSamplers();
+
+
+
+	collisionConfiguration = new btDefaultCollisionConfiguration();
+	dispatcher = new btCollisionDispatcher(collisionConfiguration);
+	overlappingPairCache = new btDbvtBroadphase();
+	solver = new btSequentialImpulseConstraintSolver();
+	world = new btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
+
+	world->setGravity(btVector3(0.0f, 0.0f, 0.0f));
+	world->addRigidBody(spaceship.GetRigidBody());
 }
 
 
@@ -337,7 +354,10 @@ void display()
 	glm::vec3 cameraPosition = camera.ResolveCamPosition();	
 	glutil::MatrixStack modelMatrix;			
 	modelMatrix.SetMatrix(camera.CalcMatrix());
-	
+
+
+	world->stepSimulation(1.0f / 60.0f, 10);
+
 
 	int timeSinceStart = glutGet(GLUT_ELAPSED_TIME);
 	deltaTime = timeSinceStart - oldTimeSinceStart;
@@ -362,6 +382,19 @@ void display()
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glUseProgram(0);
 	}
+
+
+	for(int i = world->getNumCollisionObjects() - 1; i >= 0; i--)
+	{
+		btCollisionObject *object = world->getCollisionObjectArray()[i];
+		btRigidBody *body = btRigidBody::upcast(object);
+		if(body && body->getMotionState())
+		{
+			btTransform trans;
+			body->getMotionState()->getWorldTransform(trans);
+		}
+	}
+
 
 	spaceship.Update(deltaTime);
 	spaceship.Render(modelMatrix, simpleProgram);
