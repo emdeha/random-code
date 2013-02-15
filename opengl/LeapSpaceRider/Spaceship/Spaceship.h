@@ -23,7 +23,7 @@ private:
 	glm::vec3 maxSpeed;
 	glm::vec3 currentSpeed;
 	
-	btRigidBody *body;
+	//btRigidBody *body;
 
 	float steerAngle;
 
@@ -45,7 +45,7 @@ public:
 	glm::vec3 GetPosition();
 	float GetSteerAngle();
 
-	btRigidBody *GetRigidBody();
+	//btRigidBody *GetRigidBody();
 };
 
 

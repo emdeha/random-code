@@ -27,7 +27,7 @@ void Spaceship::InitMesh(const std::string &meshFileName)
 		std::printf(except.what());
 		throw;
 	}
-
+	/*
 	btBoxShape *collisionShape = new btBoxShape(btVector3(0.5f, 0.5f, 0.5f));
 	btScalar mass = 1.0f;
 
@@ -39,7 +39,7 @@ void Spaceship::InitMesh(const std::string &meshFileName)
 	//collisionShape->calculateLocalInertia(mass, localInertia);
 	btRigidBody::btRigidBodyConstructionInfo info(mass, motionState, collisionShape, localInertia);
 
-	body = new btRigidBody(info);
+	body = new btRigidBody(info);*/
 }
 
 void Spaceship::Update(float deltaTime)
@@ -58,10 +58,10 @@ void Spaceship::Update(float deltaTime)
 	//{
 		velocity += acceleration * deltaTime;
 	//}
-
+/*
 	btTransform bodyTransform;
 	bodyTransform.setOrigin(btVector3(position.x, position.y, position.z));
-	body->getMotionState()->setWorldTransform(bodyTransform);
+	//body->getMotionState()->setWorldTransform(bodyTransform);*/
 	position += velocity * deltaTime;
 }
 void Spaceship::Render(glutil::MatrixStack &modelMatrix, const SimpleProgram &program)
@@ -71,7 +71,7 @@ void Spaceship::Render(glutil::MatrixStack &modelMatrix, const SimpleProgram &pr
 		glutil::PushStack push(modelMatrix);
 	
 		modelMatrix.Translate(position);
-		modelMatrix.Rotate(upVector, -steerAngle);
+		modelMatrix.Rotate(forwardVector, steerAngle);
 		modelMatrix.Scale(0.5f);
 		
 		glUniformMatrix4fv(program.modelToCameraMatrixUnif, 1, GL_FALSE, glm::value_ptr(modelMatrix.Top()));
@@ -85,12 +85,12 @@ void Spaceship::Render(glutil::MatrixStack &modelMatrix, const SimpleProgram &pr
 void Spaceship::Steer(float deltaTime, float steerFactor, float steerInput)
 {
 	steerAngle = steerInput * steerFactor;
-	glutil::MatrixStack transform;
+	/*glutil::MatrixStack transform;
 	transform.Rotate(upVector, -steerAngle);
 	glm::vec3 newForwardVector = forwardVector;
 	newForwardVector = glm::mat3(transform.Top()) * newForwardVector;
 	forwardVector = glm::normalize(newForwardVector);
-
+	*/
 
 	// lerping for keyboard. remove if leap.
 	/*
@@ -112,8 +112,8 @@ float Spaceship::GetSteerAngle()
 {
 	return steerAngle;
 }
-
+/*
 btRigidBody *Spaceship::GetRigidBody()
 {
 	return body;
-}
+}*/

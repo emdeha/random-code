@@ -35,14 +35,14 @@ SimpleProgram simpleProgram;
 TextureProgData textureProgram;
 const int g_projectionBlockIndex = 0;
 const int g_colorTexUnit = 0;
-
+/*
 
 btDiscreteDynamicsWorld *world;
 btDefaultCollisionConfiguration *collisionConfiguration;
 btCollisionDispatcher *dispatcher;
 btBroadphaseInterface *overlappingPairCache;
 btSequentialImpulseConstraintSolver *solver;
-
+*/
 
 void InitializeSimpleProgram()
 {
@@ -309,7 +309,7 @@ void init()
 	CreateSamplers();
 
 
-
+	/*
 	collisionConfiguration = new btDefaultCollisionConfiguration();
 	dispatcher = new btCollisionDispatcher(collisionConfiguration);
 	overlappingPairCache = new btDbvtBroadphase();
@@ -317,7 +317,7 @@ void init()
 	world = new btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
 
 	world->setGravity(btVector3(0.0f, 0.0f, 0.0f));
-	world->addRigidBody(spaceship.GetRigidBody());
+	world->addRigidBody(spaceship.GetRigidBody());*/
 }
 
 
@@ -351,12 +351,14 @@ void display()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 
+	camera = TopDownCamera(spaceship.GetPosition(), CAMERA_HEIGHT, 270.0f, 45.0f);
 	glm::vec3 cameraPosition = camera.ResolveCamPosition();	
 	glutil::MatrixStack modelMatrix;			
 	modelMatrix.SetMatrix(camera.CalcMatrix());
 
+	modelMatrix.RotateZ(spaceship.GetSteerAngle());
 
-	world->stepSimulation(1.0f / 60.0f, 10);
+	//world->stepSimulation(1.0f / 60.0f, 10);
 
 
 	int timeSinceStart = glutGet(GLUT_ELAPSED_TIME);
@@ -364,7 +366,6 @@ void display()
 	timeSinceStart_secs = timeSinceStart;
 	oldTimeSinceStart = timeSinceStart;
 
-	camera = TopDownCamera(spaceship.GetPosition(), CAMERA_HEIGHT, 270.0f, 45.0f);
 
 	{
 		glUseProgram(textureProgram.theProgram);
@@ -382,7 +383,7 @@ void display()
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glUseProgram(0);
 	}
-
+	/*
 
 	for(int i = world->getNumCollisionObjects() - 1; i >= 0; i--)
 	{
@@ -393,7 +394,7 @@ void display()
 			btTransform trans;
 			body->getMotionState()->getWorldTransform(trans);
 		}
-	}
+	}*/
 
 
 	spaceship.Update(deltaTime);
